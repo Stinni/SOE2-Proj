@@ -1,6 +1,7 @@
 *.class
 *.bc
 *.callgraph
+*.old
 
 # Package Files #
 *.jar
