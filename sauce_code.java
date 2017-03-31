@@ -57,8 +57,8 @@ public class sauce_code
                             //System.out.println(func);
                             break;
                         }
-                    case(0): //Look for a "function"
-		       			if (line.startsWith("Call graph node for function"))
+					case(0): //Look for a "function"
+						if (line.startsWith("Call graph node for function"))
                         {
                             String[] scope_list = line.split("\'");
                             current_scope = scope_list[1];
@@ -89,7 +89,7 @@ public class sauce_code
 	
 	private void parseFromCallGraph(Hashtable<String, ArrayList<String>> parsed_callgraph)
 	{
-				Enumeration keys = parsed_callgraph.elements();
+		Enumeration keys = parsed_callgraph.elements();
 		while(keys.hasMoreElements())
 		{
             @SuppressWarnings("unchecked")
@@ -195,13 +195,14 @@ public class sauce_code
 		prints.add("bug: " + f + " in " + caller + ", " + "pair: (" + pair + "), support: " + support + ", confidence: " + numf.format(confidence * 100.00) + "%");
 	}
 
-    public void flushPrint()
-    {
-    	for(int i = 0; i < prints.size(); i++)
-    	{
-    		System.out.println(prints.get(i));
-    	}
-    }
+	public void flushPrint()
+	{
+		Iterator<String> printIterator = prints.iterator();
+		while(printIterator.hasNext())
+		{
+			System.out.println(printIterator.next());
+		}
+	}
 
     public void run(String callgraph_location)
     {
