@@ -58,7 +58,7 @@ public class sauce_code
                             break;
                         }
                     case(0): //Look for a "function"
-       			if (line.startsWith("Call graph node for function"))
+		       			if (line.startsWith("Call graph node for function"))
                         {
                             String[] scope_list = line.split("\'");
                             current_scope = scope_list[1];
@@ -68,14 +68,14 @@ public class sauce_code
                             state = 1;
                             //System.out.println(current);
                             break;
-       			}
+		       			}
                     default:
-               		if (line.length() == 0)
-                        {
-                            state = 0;
-                            //System.out.println("");
-       			}
-     			break;
+	               		if (line.length() == 0)
+	                    {
+	                        state = 0;
+	                        //System.out.println("");
+						}
+     					break;
                 }
             }
         }
@@ -135,9 +135,9 @@ public class sauce_code
 	
 	public void findBugs(Hashtable<String, ArrayList<String>> parsed_callgraph)
 	{
-		System.out.println("eg for inni findbugs");
-		System.out.println("T_conf: " + T_CONFIDENCE);
-		System.out.println("T_supp: " + T_SUPPORT);	
+		//System.out.println("eg for inni findbugs");
+		//System.out.println("T_conf: " + T_CONFIDENCE);
+		//System.out.println("T_supp: " + T_SUPPORT);	
 		Enumeration<String> callgraphKeySet = parsed_callgraph.keys();
 		while(callgraphKeySet.hasMoreElements())
 		{
@@ -156,7 +156,7 @@ public class sauce_code
 					String key = pairs(f, f2);					
 					if(!support_value.containsKey(key) || !support_value.containsKey(f))
 					{
-						System.out.println("for inni if setningu 1");
+						//System.out.println("for inni if setningu 1");
 						continue;
 					}
 				
@@ -167,11 +167,11 @@ public class sauce_code
 
 					if(confidence >= T_CONFIDENCE &&  pairSupport >= T_SUPPORT)
 					{
-						System.out.println("for inni if setningu 2");
+						//System.out.println("for inni if setningu 2");
 
 						if(!calls.contains(f2))
 						{
-							System.out.println("for inni if setningu 3");
+							//System.out.println("for inni if setningu 3");
 							printBugs(caller, f, f2, pairSupport, confidence);
 						}
 					}
@@ -182,7 +182,7 @@ public class sauce_code
 
 	private void printBugs(String caller, String f, String f2, int support, float confidence)
 	{
-		System.out.println("eg for inni printbugs");	
+		//System.out.println("eg for inni printbugs");	
 		String pair;
 		if(f.compareTo(f2) > 0)
 		{
