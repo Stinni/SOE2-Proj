@@ -197,7 +197,6 @@ public class sauce_code
 
     public void flushPrint()
     {
-    	Collections.sort(prints);
     	for(int i = 0; i < prints.size(); i++)
     	{
     		System.out.println(prints.get(i));
