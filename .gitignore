@@ -1,0 +1,9 @@
+*.class
+*.bc
+*.callgraph
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.DS_Store
