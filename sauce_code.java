@@ -21,29 +21,46 @@ import java.math.RoundingMode;
 
 public class sauce_code
 {
+	// holds the support value for a given pair
 	private Hashtable<String, Integer> support_value = new Hashtable<String,Integer>();
+
+	// containes the scope (key) and list of function calls (values) for each scope
 	private Hashtable<String, ArrayList<String>> parsed_callgraph;
+
+	// holds all key-value pairs for the callgraph
 	private HashSet<String> allValues = new HashSet<String>();
-	static int T_SUPPORT = 3;
-    static float T_CONFIDENCE = 0.65f;
+
+	// number formatter for the output
 	NumberFormat numf = NumberFormat.getNumberInstance();
+
+	// list to hold all the error messages that are to be printed out to the screen
 	ArrayList<String> prints = new ArrayList<String>();
 
+	// default values
+	static int T_SUPPORT = 3;
+	static float T_CONFIDENCE = 0.65f;
+
+	/*
+	Creates a HashTable from the callgraph file
+	 */
     public static Hashtable<String,ArrayList<String>> parseFile(String callgraph_loc)
     {
-		Hashtable<String, ArrayList<String>> table = new Hashtable<String,ArrayList<String>>();
+		Hashtable<String, ArrayList<String>> table = new Hashtable<String,ArrayList<String>>();	
         try
         {
+        	// read from the callgraph file
             FileReader fileRdr = new FileReader(callgraph_loc);
             BufferedReader buf = new BufferedReader(fileRdr);
             String line = buf.readLine();
-
-            int state = 0; //0 - Empty Line, 1 - Call graph
+		
+            int state = 0;
             String current_scope = null;
             while ((line = buf.readLine()) != null)
             {
                 switch (state)
                 {
+                	// finds out what scope we are in at the moment,
+					// creates a value under a key in the hashtable
                     case(1):
                         if (line.matches("(.*)CS<0x[0-9a-f]*> calls function(.*)"))
                         {
@@ -54,26 +71,24 @@ public class sauce_code
                             {
                                 curList.add(func);
                             }
-                            //System.out.println(func);
                             break;
                         }
-					case(0): //Look for a "function"
-						if (line.startsWith("Call graph node for function"))
+                    // finds out which function we are calling from within the scope,
+					// creates a key in the hashtable
+                    case(0):
+       					if (line.startsWith("Call graph node for function"))
                         {
                             String[] scope_list = line.split("\'");
                             current_scope = scope_list[1];
                             ArrayList<String> nlist = new ArrayList<String>();
                             table.put(current_scope, nlist);
-                            //System.out.println("Current: " + current_scope);
                             state = 1;
-                            //System.out.println(current);
                             break;
-		       			}
+       					}
                     default:
-	               		if (line.length() == 0)
-	                    {
-	                        state = 0;
-	                        //System.out.println("");
+						if (line.length() == 0)
+						{
+								state = 0;
 						}
      					break;
                 }
@@ -84,7 +99,7 @@ public class sauce_code
             System.out.println("Error reading file!");
             System.exit(1);
         }
-	   return table;
+		return table;
     }
 	
 	private void parseFromCallGraph(Hashtable<String, ArrayList<String>> parsed_callgraph)
@@ -92,9 +107,10 @@ public class sauce_code
 		Enumeration keys = parsed_callgraph.elements();
 		while(keys.hasMoreElements())
 		{
-            @SuppressWarnings("unchecked")
+			@SuppressWarnings("unchecked")
 			ArrayList<String> values = (ArrayList<String>)keys.nextElement();
-			HashSet<String> valueSet = new HashSet<String>(values); //cuz it only stores unique sets
+			// get the unique keys
+			HashSet<String> valueSet = new HashSet<String>(values);
 			values = new ArrayList<String>(valueSet);
 			
 			for(int i = 0; i < values.size(); i++)
@@ -102,29 +118,34 @@ public class sauce_code
 				allValues.add(values.get(i));
 				for(int j = i + 1; j < values.size(); j++)
 				{
-					// order set in alpabetical order if possible
-					String pair = pairs(values.get(i), values.get(j)); 
+					// order set in alpabetical order
+					String pair = sortAlphabetical(values.get(i), values.get(j));
 					supportHandler(pair);
 				}
 				supportHandler(values.get(i));
 			}
 		}
 	}
-	
-	private String pairs(String i, String j)
+
+	/*
+	 Orders a given set in alpabetical order
+	 */
+	private String sortAlphabetical(String i, String j)
 	{
-		
-		// order set in alpabetical order if possible
 		String pair = (i.compareTo(j) > 0) ? i + ":" + j : j + ":" + i;
 		return pair;
 	}
-	
+
+	/*
+	Increments the Support value for the pair,
+	initializes the Support value if the pair is new
+	 */
 	private void supportHandler(String pair)
 	{
-		
 		Integer support = support_value.get(pair);
 		if(support == null)
 		{
+			// if the pair is new, we set its Support value as 1
 			support_value.put(pair, 1);
 		}
 		else 
@@ -135,9 +156,6 @@ public class sauce_code
 	
 	public void findBugs(Hashtable<String, ArrayList<String>> parsed_callgraph)
 	{
-		//System.out.println("eg for inni findbugs");
-		//System.out.println("T_conf: " + T_CONFIDENCE);
-		//System.out.println("T_supp: " + T_SUPPORT);	
 		Enumeration<String> callgraphKeySet = parsed_callgraph.keys();
 		while(callgraphKeySet.hasMoreElements())
 		{
@@ -153,25 +171,20 @@ public class sauce_code
 				while(iter.hasNext())
 				{
 					String f2 = iter.next();
-					String key = pairs(f, f2);					
+					String key = sortAlphabetical(f, f2);
 					if(!support_value.containsKey(key) || !support_value.containsKey(f))
 					{
-						//System.out.println("for inni if setningu 1");
 						continue;
 					}
 				
 					int pairSupport = support_value.get(key).intValue();
 					int singleSupport = support_value.get(f).intValue();
 					float confidence = (float)pairSupport/singleSupport;
-					printBugs(caller, f, f2, pairSupport, confidence);
 
 					if(confidence >= T_CONFIDENCE &&  pairSupport >= T_SUPPORT)
 					{
-						//System.out.println("for inni if setningu 2");
-
 						if(!calls.contains(f2))
 						{
-							//System.out.println("for inni if setningu 3");
 							printBugs(caller, f, f2, pairSupport, confidence);
 						}
 					}
@@ -180,9 +193,12 @@ public class sauce_code
 		}
 	}
 
+	/*
+	Adds the error message to an ArrayList so the messages can be sorted
+	before they are printed out onto the screen
+	 */
 	private void printBugs(String caller, String f, String f2, int support, float confidence)
 	{
-		//System.out.println("eg for inni printbugs");	
 		String pair;
 		if(f.compareTo(f2) > 0)
 		{
@@ -195,6 +211,9 @@ public class sauce_code
 		prints.add("bug: " + f + " in " + caller + ", " + "pair: (" + pair + "), support: " + support + ", confidence: " + numf.format(confidence * 100.00) + "%");
 	}
 
+	/*
+	Sorts the ArrayList of error messages and prints them out onto the screen
+	 */
 	public void flushPrint()
 	{
 		Iterator<String> printIterator = prints.iterator();
@@ -204,28 +223,15 @@ public class sauce_code
 		}
 	}
 
-    public void run(String callgraph_location)
-    {
-        numf.setMaximumFractionDigits(2);
-        numf.setMinimumFractionDigits(2);
-        numf.setRoundingMode(RoundingMode.HALF_EVEN);
-
-    	Hashtable<String, ArrayList<String>> parsed_callgraph = parseFile(callgraph_location);
-    	parseFromCallGraph(parsed_callgraph);
-    	findBugs(parsed_callgraph);
-    	flushPrint();
-    }
-
     public static void main(String [] args)
     {
-        /*Map<String, Integer> functionHashMap = new HashMap<String, Integer>();*/
-        /*Map<Pair, Integer> functionPairHashMap = new HashMap<Pair, Integer>();*/
-        /*Map<String, List<String>> likelyInvariants = new HashMap<String, List<String>>();*/
-        /*List<Scope> scopes = new ArrayList<Scope>();*/
-        sauce_code sauce_hot = new sauce_code();
-        // default arguments
+		sauce_code sauce_hot = new sauce_code();
+        String directoryPath = "empty directory";
         String callgraph = "empty file";
-
+		sauce_hot.numf.setMaximumFractionDigits(2);
+		sauce_hot.numf.setMinimumFractionDigits(2);
+		sauce_hot.numf.setRoundingMode(RoundingMode.HALF_EVEN);
+  
         // Process command line args
         if(args.length < 1)
         {
@@ -240,7 +246,16 @@ public class sauce_code
         {
             T_CONFIDENCE = (float)Integer.parseInt(args[2]) / 100;
         }
-        callgraph = args[0] + ".callgraph"; // inside pipair file, it generates nameOfTheTest.bc.callgraph using OPT command
-        sauce_hot.run(callgraph);
+
+		// inside pipair file, it generates nameOfTheTest.bc.callgraph using OPT command
+        callgraph = args[0] + ".callgraph";
+        //final String callgraph_location = directoryPath + "/" + callgraph;
+        final String callgraph_location = callgraph;
+
+		//sauce_hot.run(callgraph_location);
+		Hashtable<String, ArrayList<String>> parsed_callgraph = sauce_hot.parseFile(callgraph_location);
+		sauce_hot.parseFromCallGraph(parsed_callgraph);
+		sauce_hot.findBugs(parsed_callgraph);
+		sauce_hot.flushPrint();
     }
 }

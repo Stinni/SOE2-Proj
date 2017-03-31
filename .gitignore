@@ -1,5 +1,7 @@
 *.class
 *.bc
+*.o
+*.out
 *.callgraph
 *.old
 

@@ -1,5 +1,4 @@
 #/bin/bash
 
-declare currentDirectory="$(pwd)"
 opt -print-callgraph $1 >$1.callgraph 2>&1 1>/dev/null
-java -Xmx128M -cp sauce_code $currentDirectory $@ 2>/dev/null
+java -Xms128m -Xmx128M -cp .. sauce_code $@ 2>/dev/null
